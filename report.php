@@ -503,7 +503,6 @@ switch ($action) {
     case 'vall':         // View all responses.
     case 'vallasort':    // View all responses sorted in ascending order.
     case 'vallarsort':   // View all responses sorted in descending order.
-
         $PAGE->set_title(get_string('questionnairereport', 'questionnaire'));
         $PAGE->set_heading(format_string($course->fullname));
         echo $questionnaire->renderer->header();
@@ -527,7 +526,6 @@ switch ($action) {
                 $SESSION->questionnaire->current_tab = 'valldefault';
         }
         include('tabs.php');
-
         $respinfo = '';
         $resps = array();
         // Enable choose_group if there are questionnaire groups and groupmode is not set to "no groups"
@@ -609,6 +607,7 @@ switch ($action) {
         $strsort = get_string('order_'.$sort, 'questionnaire');
         $respinfo .= $strsort;
         $respinfo .= $questionnaire->renderer->help_icon('orderresponses', 'questionnaire');
+
         $questionnaire->page->add_to_page('respondentinfo', $respinfo);
 
         $ret = $questionnaire->survey_results(1, 1, '', '', '', false, $currentgroupid, $sort);

@@ -1082,7 +1082,7 @@ class questionnaire {
     }
 
     // Blankquestionnaire : if we are printing a blank questionnaire.
-    public function survey_print_render($message = '', $referer='', $courseid, $rid=0, $blankquestionnaire=false) {
+    public function survey_print_render($message = '', $referer='', $courseid, $rid=0, $blankquestionnaire=false,$vieall=false) {
         global $DB, $CFG;
 
         if (! $course = $DB->get_record("course", array("id" => $courseid))) {
@@ -1109,6 +1109,19 @@ class questionnaire {
 
         if ($section > $numsections) {
             return(false);  // Invalid section.
+        }
+
+        if ($vieall) {
+            if (!$this->capabilities->readallresponses && !$this->capabilities->readallresponseanytime) {
+                // Should never happen, unless called directly by a snoop.
+                print_error('nopermissions', '', '', get_string('viewallresponses', 'questionnaire'));
+                // Finish the page.
+                echo $this->renderer->footer($course);
+                return;
+            }
+            $this->print_survey_start($message, $section = 1, 1, false, $rid = '');
+            $this->survey_results(1, 1, '', '', '', false);
+            return;
         }
 
         $hasrequired = $this->has_required();
@@ -1143,7 +1156,6 @@ class questionnaire {
                 $s ++;
             }
         }
-
         $this->print_survey_start($message, $section = 1, 1, $hasrequired, $rid = '');
 
         if (($referer == 'preview') && $this->has_dependencies()) {
@@ -2419,8 +2431,22 @@ class questionnaire {
                 return;
             }
             $total = count($rows);
-            $this->page->add_to_page('respondentinfo',
-                ' '.get_string('responses', 'questionnaire').': <strong>'.$total.'</strong>');
+            $outdata = ' '.get_string('responses', 'questionnaire').': <strong>'.$total.'</strong>';
+            // ------------------------------------------------------------------------------------------------------
+            $linkname = '&nbsp;'.get_string('printall', 'questionnaire');
+            $url = '/mod/questionnaire/print.php?qid='.$this->survey->id.'&courseid='.$this->course->id.'&sec=1&type=all';
+            $title = get_string('printtooltipall', 'questionnaire');
+            $options = array('menubar' => true, 'location' => false, 'scrollbars' => true,
+                'resizable' => true, 'height' => 600, 'width' => 800);
+            $name = 'popup';
+            $link = new moodle_url($url);
+            $action = new popup_action('click', $link, $name, $options);
+            $actionlink = $this->renderer->action_link($link, $linkname, $action, ['title' => $title],
+                new pix_icon('t/print', $title));
+            $outdata .= ' ' . $actionlink;
+
+
+            $this->page->add_to_page('respondentinfo', $outdata);
             if (empty($rows)) {
                 $errmsg = get_string('erroropening', 'questionnaire') .' '. get_string('noresponsedata', 'questionnaire');
                     return($errmsg);
